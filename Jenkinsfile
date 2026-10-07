@@ -33,12 +33,22 @@ pipeline {
         }
 
         stage('Deploy') {
-            steps {
-                echo 'Deployment stage will be configured after cloud setup.'
-            }
+    steps {
+        echo 'Deploying application to EC2...'
+
+        sshagent(['ec2-ssh']) {
+            sh '''
+                scp -o StrictHostKeyChecking=no devops-cloud-demo.tar.gz ubuntu@51.21.199.234:/tmp/
+
+                ssh -o StrictHostKeyChecking=no ubuntu@51.21.199.234 "
+                    sudo rm -rf /var/www/html/*
+                    sudo tar -xzf /tmp/devops-cloud-demo.tar.gz -C /var/www/html
+                    sudo systemctl reload nginx
+                "
+            '''
         }
     }
-
+}
     post {
         success {
             echo 'Pipeline completed successfully!'
